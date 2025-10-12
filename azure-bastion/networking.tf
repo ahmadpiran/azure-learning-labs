@@ -1,5 +1,5 @@
 # Virtual Network
-resource "azurerm_virtual_network" "my_terraform_vnet" {
+resource "azurerm_virtual_network" "bastion_lab_vnet" {
   name                = "${random_pet.prefix.id}-vnet"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.rg.location
@@ -10,7 +10,7 @@ resource "azurerm_virtual_network" "my_terraform_vnet" {
 resource "azurerm_subnet" "bastion_subnet" {
   name                 = "AzureBastionSubnet"
   resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.my_terraform_vnet.name
+  virtual_network_name = azurerm_virtual_network.bastion_lab_vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
@@ -18,7 +18,7 @@ resource "azurerm_subnet" "bastion_subnet" {
 resource "azurerm_subnet" "vm_subnet" {
   name                 = "VMSubnet"
   resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.my_terraform_vnet.name
+  virtual_network_name = azurerm_virtual_network.bastion_lab_vnet.name
   address_prefixes     = ["10.0.2.0/24"]
 }
 
