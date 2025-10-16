@@ -1,9 +1,17 @@
 # Entra ID Access Management
 Learning Azure Entra ID through hands-on Terraform practice.
 
-## Current Status(In progress): Step 3 - Multiple Users ✅
+## Current Status(In progress): Step 4 - Security Groups ✅
 
-Using `for_each` to create multiple users from a single resource definition.
+Users are organized into department-based security groups with separate membership resources.
+
+This project uses `azuread_group_member` resources instead of the `members` attribute because:
+
+- **Granular control**: Each membership is independently managed
+- **Hybrid management**: Supports both Terraform and manual changes
+- **Reduced blast radius**: Changes to one member don't affect others
+- **Enterprise ready**: Pattern used in production environments
+
 
 ## Prerequisites
 - Azure subscription
@@ -30,39 +38,40 @@ terraform apply
 ```
 
 ## Current Features
-- ✅ Creates multiple users from a map definition
-- ✅ Each user has department and job title
+- ✅ Creates multiple users and security groups from a map definition
+- ✅ Each user has department and job title and group assignment
 - ✅ Easy to add/remove users without affecting others
-- ✅ Structured outputs showing all created users
+- ✅ Easy to add/remove users to groups
+- ✅ Structured outputs showing all created users and groups and memnerships
 
-## Adding More Users
+## Current Architecture
+```
+Users:
+├── ahmad.cloud       → [Engineering-FullAccess, Operations-InfraAccess]
+├── ilhan.ops         → [Operations-InfraAccess]
+├── ayhan.finance     → [Finance-ReadOnly]
+└── sara.contractor   → [Contractors-Limited]
 
-Just add to the `users` map in `main.tf`:
-```hcl
-locals {
-  users = {
-    new_user = {
-      username     = "new.user"
-      display_name = "New User"
-      department   = "Sales"
-      job_title    = "Sales Rep"
-    }
-    # ... existing users ...
-  }
-}
+Total: 4 users, 4 groups, 5 memberships
 ```
 
-Run `terraform apply` - only the new user is created!
+## Adding Users with Multiple Groups
+```hcl
+new_user = {
+  username     = "new.user"
+  display_name = "New User"
+  department   = "Engineering"
+  job_title    = "Developer"
+  groups       = ["engineering", "operations"]  # Multiple groups!
+}
+```
 
 ## Project Evolution
 - ✅ Step 1: Single hardcoded user
 - ✅ Step 2: Variables and better structure
 - ✅ Step 3: Multiple users with for_each
+- ✅ Step 4: Security groups
 
-
-## What works now
-- Creates a single test user in Azure Entra ID
-- Proves Terraform + Azure AD integration works
 
 ## Current state
 This is a learning project. Right now It's intentionally simple. Check commit history to see evolution!
