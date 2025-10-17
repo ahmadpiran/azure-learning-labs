@@ -45,8 +45,18 @@ resource "azurerm_network_security_group" "main" {
     source_address_prefix      = "*" #TODO: Fix this later
     destination_port_range     = "22"
     destination_address_prefix = "*"
+  }
 
-
+  security_rule {
+    name                       = "AllowHTTP"
+    priority                   = 1002
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    source_address_prefix      = "*"
+    destination_port_range     = "80"
+    destination_address_prefix = "*"
   }
 }
 
@@ -78,6 +88,8 @@ resource "azurerm_linux_virtual_machine" "main" {
   location            = azurerm_resource_group.main.location
   size                = var.vm_size
   admin_username      = var.admin_username
+
+  custom_data = filebase64("${path.module}/../scripts/cloud-init/web-server-init.yml")
 
   network_interface_ids = [azurerm_network_interface.main.id]
   admin_ssh_key {

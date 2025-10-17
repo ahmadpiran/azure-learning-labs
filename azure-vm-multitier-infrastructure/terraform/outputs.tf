@@ -17,3 +17,8 @@ output "ssh_command" {
   description = "SSH command to connect to the VM"
   value       = "ssh -i ~/.ssh/azure_vm_key ${var.admin_username}@${azurerm_public_ip.main.ip_address}"
 }
+
+output "web_url" {
+  description = "URL to access the web server"
+  value       = "http://${azurerm_public_ip.main.ip_address}"
+}

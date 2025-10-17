@@ -1,0 +1,66 @@
+#cloud-config
+
+# Update package lists
+packages:
+  - nginx
+  - curl
+  - git
+  - htop
+  - net-tools
+
+# Create a simple web page
+write_files:
+  - path: /var/www/html/index.html
+    content: |
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Azure VM Lab</title>
+          <style>
+              body {
+                  font-family: Arial, sans-serif;
+                  margin: 50px;
+                  background-color: #f0f0f0;
+              }
+              .container {
+                  background-color: white;
+                  padding: 30px;
+                  border-radius: 10px;
+                  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              }
+              h1 { color: #0078d4; }
+              .info { 
+                  background-color: #e7f3ff;
+                  padding: 15px;
+                  border-radius: 5px;
+                  margin: 20px 0;
+              }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <h1>Azure VM Multitier Infrastructure Learning Lab</h1>
+              <p>This VM was automatically configured with cloud-init!</p>
+              <div class="info">
+                  <strong>Hostname:</strong> <span id="hostname"></span><br>
+                  <strong>Date:</strong> <span id="date"></span>
+              </div>
+              <p>Installed software: Nginx, Git, htop, net-tools</p>
+          </div>
+          <script>
+              document.getElementById('hostname').textContent = window.location.hostname;
+              document.getElementById('date').textContent = new Date().toLocaleString();
+          </script>
+      </body>
+      </html>
+    permissions: '0644'
+
+# Run commands after packages are installed
+runcmd:
+  - systemctl enable nginx
+  - systemctl start nginx
+  - echo "Cloud-init completed at $(date)" >> /var/log/cloud-init-completion.log
+
+# Final message
+final_message: "VM setup complete! web server is running."
+
