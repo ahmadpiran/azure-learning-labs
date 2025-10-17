@@ -22,3 +22,18 @@ output "web_url" {
   description = "URL to access the web server"
   value       = "http://${azurerm_public_ip.main.ip_address}"
 }
+
+output "data_disk_id" {
+  description = "ID of the data disk"
+  value       = azurerm_managed_disk.data.id
+}
+
+output "data_disk_size_gb" {
+  description = "Size of the data disk in GB"
+  value       = azurerm_managed_disk.data.disk_size_gb
+}
+
+output "data_disk_name" {
+  description = "Name of the data disk"
+  value       = azurerm_managed_disk.data.name
+}

@@ -1,6 +1,10 @@
 #cloud-config
 
 # Update package lists
+package_update: true
+package_upgrade: true
+
+# Install packages
 packages:
   - nginx
   - curl
@@ -8,7 +12,56 @@ packages:
   - htop
   - net-tools
 
-# Create a simple web page
+# Create mount point directory
+runcmd:
+  # Wait for disk to be available
+  - sleep 10
+  
+  # Check if disk exists (lun 0 = /dev/disk/azure/scsi1/lun0)
+  - |
+    if [ -e /dev/disk/azure/scsi1/lun0 ]; then
+      echo "Data disk found, formatting..."
+      
+      # Create partition
+      parted /dev/disk/azure/scsi1/lun0 --script mklabel gpt mkpart primary ext4 0% 100%
+      
+      # Wait for partition to be ready
+      sleep 5
+      
+      # Format partition
+      mkfs.ext4 /dev/disk/azure/scsi1/lun0-part1
+      
+      # Create mount point
+      mkdir -p /mnt/data
+      
+      # Get UUID
+      UUID=$(blkid -s UUID -o value /dev/disk/azure/scsi1/lun0-part1)
+      
+      # Add to fstab for automatic mounting on reboot
+      echo "UUID=$UUID /mnt/data ext4 defaults,nofail 0 2" >> /etc/fstab
+      
+      # Mount it now
+      mount /mnt/data
+      
+      # Create a test directory
+      mkdir -p /mnt/data/app
+      
+      # Set permissions
+      chown -R azureuser:azureuser /mnt/data
+      
+      echo "Data disk mounted at /mnt/data" > /var/log/data-disk-setup.log
+    else
+      echo "Data disk not found" > /var/log/data-disk-setup.log
+    fi
+  
+  # Start nginx
+  - systemctl enable nginx
+  - systemctl start nginx
+  
+  # Create completion log
+  - echo "Cloud-init completed at $(date)" >> /var/log/cloud-init-completion.log
+
+# Create web page
 write_files:
   - path: /var/www/html/index.html
     content: |
@@ -35,16 +88,22 @@ write_files:
                   border-radius: 5px;
                   margin: 20px 0;
               }
+              .success {
+                  color: #28a745;
+                  font-weight: bold;
+              }
           </style>
       </head>
       <body>
           <div class="container">
-              <h1>Azure VM Multitier Infrastructure Learning Lab</h1>
+              <h1>Azure VM Learning Lab</h1>
               <p>This VM was automatically configured with cloud-init!</p>
               <div class="info">
                   <strong>Hostname:</strong> <span id="hostname"></span><br>
                   <strong>Date:</strong> <span id="date"></span>
               </div>
+              <p class="success">Nginx web server running</p>
+              <p class="success">Data disk attached and mounted at /mnt/data</p>
               <p>Installed software: Nginx, Git, htop, net-tools</p>
           </div>
           <script>
@@ -55,12 +114,4 @@ write_files:
       </html>
     permissions: '0644'
 
-# Run commands after packages are installed
-runcmd:
-  - systemctl enable nginx
-  - systemctl start nginx
-  - echo "Cloud-init completed at $(date)" >> /var/log/cloud-init-completion.log
-
-# Final message
-final_message: "VM setup complete! web server is running."
-
+final_message: "VM setup complete with data disk mounted!"

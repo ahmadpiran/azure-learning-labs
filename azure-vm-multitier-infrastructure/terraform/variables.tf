@@ -20,3 +20,15 @@ variable "vm_size" {
   type        = string
   default     = "Standard_B1s"
 }
+
+variable "data_disk_size_gb" {
+  description = "Size of the data disk in GB"
+  type        = number
+  default     = 32
+}
+
+variable "data_disk_type" {
+  description = "Type of managed disk (Standard_LRS, Premium_LRS, StandardSSD_LRS)"
+  type        = string
+  default     = "Standard_LRS"
+}

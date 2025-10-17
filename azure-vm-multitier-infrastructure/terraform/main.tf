@@ -108,3 +108,21 @@ resource "azurerm_linux_virtual_machine" "main" {
     version   = "latest"
   }
 }
+
+# Managed data disk
+resource "azurerm_managed_disk" "data" {
+  name                 = "datadisk-vminfra-lab-001"
+  location             = azurerm_resource_group.main.location
+  resource_group_name  = azurerm_resource_group.main.name
+  storage_account_type = var.data_disk_type
+  create_option        = "Empty"
+  disk_size_gb         = var.data_disk_size_gb
+}
+
+# Attach data disk to VM
+resource "azurerm_virtual_machine_data_disk_attachment" "data" {
+  virtual_machine_id = azurerm_linux_virtual_machine.main.id
+  managed_disk_id    = azurerm_managed_disk.data.id
+  lun                = 0
+  caching            = "ReadWrite"
+}
