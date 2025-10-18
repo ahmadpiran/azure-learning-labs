@@ -2,7 +2,7 @@
 
 ## Infrastructure Diagram
 
-[Phase1-Architecture](./architecture-diagrams/phase1-architecture.png)
+![Phase1-Architecture](./architecture-diagrams/phase1-architecture.png)
 
 ## Component Details
 
