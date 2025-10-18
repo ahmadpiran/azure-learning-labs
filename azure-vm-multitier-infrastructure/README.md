@@ -2,102 +2,81 @@
 
 Learning project to build production-ready VM infrastructure.
 
-## Current Phase
-Phase 1 - Step 4: Data disk for persistent storage ✅
+## 🎯 Project Goals
 
-## What's Deployed
-- 1 Ubuntu 24.04 VM (Standard_B1s)
-- 1 OS disk (30 GB, Standard_LRS)
-- **1 Data disk (32 GB, Standard_LRS)**
-- Nginx web server
-- Automated disk formatting and mounting
-- Custom web page
+- Learn Azure VM infrastructure from first principles
+- Master Terraform for infrastructure as code
+- Understand production-ready architecture patterns
+- Build incrementally (working code at every step)
+- Document everything for future reference
 
-## Storage Architecture
-- **OS Disk** (`/`): System files, applications
-- **Temp Disk** (`/mnt`): Ephemeral storage (lost on VM restart)
-- **Data Disk** (`/mnt/data`): Persistent application data
+## 📊 Current Status
 
-## Data Disk Details
-- Size: 32 GB
-- Type: Standard_LRS (HDD)
-- Mount point: `/mnt/data`
-- Filesystem: ext4
-- Auto-mount: Yes (via /etc/fstab)
-- Owned by: azureuser
+**Phase 1: COMPLETED ✅**
 
-## Access
+Single-VM infrastructure with automated configuration, persistent storage, and web server.
 
-### SSH
-```bash
-ssh -i ~/.ssh/azure_vm_key azureuser@[YOUR_PUBLIC_IP]
+## 🏗️ What's Deployed (Phase 1)
+```
+├── Resource Group (rg-vminfra-lab-dev)
+├── Virtual Network (10.0.0.0/16)
+│   └── Subnet (10.0.1.0/24)
+├── Network Security Group
+│   ├── SSH Rule (port 22)
+│   └── HTTP Rule (port 80)
+├── Public IP (Static)
+├── Network Interface
+├── Virtual Machine (Ubuntu 24.04, Standard_B1s)
+│   ├── OS Disk (30 GB)
+│   └── Data Disk (32 GB, mounted at /mnt/data)
+└── Cloud-Init Automation
+    ├── Nginx web server
+    ├── Development tools
+    └── Automated disk setup
 ```
 
-### Web Browser
-```
-http://[YOUR_PUBLIC_IP]
-```
+## 🚀 Quick Start
 
-### Data Disk Location (inside VM)
-```bash
-cd /mnt/data
-ls -la
-```
-
-## Quick Commands
+### Prerequisites
+- Azure subscription
+- Terraform >= 1.0
+- Azure CLI >= 2.50
+- SSH client
 
 ### Deploy
 ```bash
+# Clone and navigate
+git clone 
+cd azure-learning-labs/azure-vm-multitier-infrastructure
+
+# Authenticate to Azure
+az login
+
+# Generate SSH key
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/azure_vm_key
+
+# Deploy infrastructure
 cd terraform
-terraform apply
+terraform init
+terraform plan main.tfplan
+terraform apply main.tfplan
+
+# Get connection info
+terraform output
 ```
 
-### Check Disk Inside VM
+### Access
 ```bash
-ssh -i ~/.ssh/azure_vm_key azureuser@[IP]
-df -h | grep /mnt/data
-lsblk
-exit
+# SSH
+ssh -i ~/.ssh/azure_vm_key azureuser@$(terraform output -raw public_ip_address)
+
+# Web (in browser)
+# http://[public-ip]
 ```
 
 ### Destroy
 ```bash
-terraform destroy
-# WARNING: This deletes the data disk and all data on it!
+terraform plan -destroy -out main.destroy.tfplan
+terraform apply main.destroy.tfplan
 ```
 
-## Cost
-- VM: ~$8-10/month
-- Data disk (32 GB Standard_LRS): ~$1.50/month
-- **Total: ~$10-12/month**
-
-## What I Learned
-- Difference between OS disk and data disk
-- Azure managed disks
-- Disk attachment with LUN
-- Automatic disk formatting with cloud-init
-- Partitioning with parted
-- Adding entries to /etc/fstab
-- Disk persistence across VM restarts
-- Block device naming in Linux (/dev/sdc)
-
-## Files Structure
-```
-.
-├── README.md
-├── terraform/
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── providers.tf
-└── scripts/
-    └── cloud-init/
-        └── web-server-init.yml
-```
-
-## Important Notes
-- Data disk survives VM stop/start
-- Data disk does NOT survive `terraform destroy`
-- Temp disk (`/mnt` on Azure VMs) is ephemeral
-- Always use data disks for application data
-- Backups should target data disks, not OS disks
