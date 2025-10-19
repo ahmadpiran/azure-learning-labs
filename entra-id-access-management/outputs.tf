@@ -24,6 +24,30 @@ output "created_groups" {
   }
 }
 
+# Application outputs
+output "created_applications" {
+  description = "Map of all created application registrations"
+  value = {
+    for key, app in azuread_application.apps : key => {
+      application_id = app.client_id # This is the client ID
+      object_id      = app.object_id
+      display_name   = app.display_name
+    }
+  }
+}
+
+# Service Principal outputs
+output "service_principals" {
+  description = "Service Principals for applications"
+  value = {
+    for key, sp in azuread_service_principal.app_service_principals : key => {
+      id           = sp.id
+      object_id    = sp.object_id
+      display_name = sp.display_name
+    }
+  }
+}
+
 # Membership details
 output "group_memberships" {
   description = "Users assigned to each group"
