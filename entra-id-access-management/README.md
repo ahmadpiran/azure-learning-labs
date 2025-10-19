@@ -20,10 +20,10 @@ Implemented complete access control with app roles and group-based assignments.
 Users → Groups → App Roles → Applications
 
 Example Flow:
-John (Engineering) 
+Ahmad (Engineering) 
   → Engineering-FullAccess group 
   → CustomerPortal.Admin role 
-  → TechFlow-CustomerPortal app
+  → Runsy-CustomerPortal app
   → Full administrative access
 ```
 
