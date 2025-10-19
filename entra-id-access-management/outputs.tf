@@ -70,13 +70,57 @@ output "membership_resources" {
   }
 }
 
-# Summary
-output "summary" {
-  description = "Quick summary of resources"
+# App role assignments
+output "app_role_assignments" {
+  description = "Groups assigned to applications with their roles"
   value = {
-    total_users       = length(azuread_user.users)
-    total_groups      = length(azuread_group.department_groups)
-    total_memberships = length(azuread_group_member.memberships)
-    tenant_id         = data.azuread_client_config.current.tenant_id
+    for key, assignment in local.flattened_assignments : key => {
+      group       = local.groups[assignment.group_key].display_name
+      application = local.applications[assignment.app_key].display_name
+      role        = local.applications[assignment.app_key].app_roles[assignment.role_key].display_name
+    }
+  }
+}
+
+# Summary by application (easier to read)
+output "access_by_application" {
+  description = "Which groups can access each application"
+  value = {
+    for app_key, app in local.applications : app.display_name => [
+      for assignment_key, assignment in local.flattened_assignments :
+      {
+        group = local.groups[assignment.group_key].display_name
+        role  = app.app_roles[assignment.role_key].display_name
+      }
+      if assignment.app_key == app_key
+    ]
+  }
+}
+
+# Summary by group (another view)
+output "access_by_group" {
+  description = "Which applications each group can access"
+  value = {
+    for group_key, group in local.groups : group.display_name => [
+      for assignment_key, assignment in local.flattened_assignments :
+      {
+        application = local.applications[assignment.app_key].display_name
+        role        = local.applications[assignment.app_key].app_roles[assignment.role_key].display_name
+      }
+      if assignment.group_key == group_key
+    ]
+  }
+}
+
+# Updated summary
+output "summary" {
+  description = "Quick summary of all resources"
+  value = {
+    total_users            = length(azuread_user.users)
+    total_groups           = length(azuread_group.department_groups)
+    total_memberships      = length(azuread_group_member.memberships)
+    total_applications     = length(azuread_application.apps)
+    total_role_assignments = length(azuread_app_role_assignment.group_assignments)
+    tenant_id              = data.azuread_client_config.current.tenant_id
   }
 }
