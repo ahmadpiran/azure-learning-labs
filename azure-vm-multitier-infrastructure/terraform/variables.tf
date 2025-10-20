@@ -15,6 +15,39 @@ variable "admin_username" {
   default     = "azureuser"
 }
 
+# Subnet CIDR Blocks
+variable "subnet_web_cidr" {
+  description = "CIDR block for web subnet (public-facing)"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "subnet_app_cidr" {
+  description = "CIDR block for App subnet (private)"
+  type        = string
+  default     = "10.0.2.0/24"
+}
+
+variable "subnet_data_cidr" {
+  description = "CIDR block for Data subnet (most restricted)"
+  type        = string
+  default     = "10.0.3.0/24"
+}
+
+variable "subnet_mgmt_cidr" {
+  description = "CIDR block for Management subnet (bastion)"
+  type        = string
+  default     = "10.0.10.0/24"
+}
+
+# My public IP for Bastion Access
+variable "admin_source_ip" {
+  description = "My Public IP address for SSH access to bastion (CIDR notation)"
+  type        = string
+  sensitive   = true
+  # curl ifconfig.me
+}
+
 variable "vm_size" {
   description = "Size of the VM"
   type        = string

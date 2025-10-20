@@ -37,3 +37,70 @@ output "data_disk_name" {
   description = "Name of the data disk"
   value       = azurerm_managed_disk.data.name
 }
+
+# ============================================
+# Phase 2: Network Infrastructure Outputs
+# ============================================
+
+# Subnet IDs
+output "subnet_web_id" {
+  description = "ID of the Web subnet"
+  value       = azurerm_subnet.web.id
+}
+
+output "subnet_app_id" {
+  description = "ID of the App subnet"
+  value       = azurerm_subnet.app.id
+}
+
+output "subnet_data_id" {
+  description = "ID of the Data subnet"
+  value       = azurerm_subnet.data.id
+}
+
+output "subnet_mgmt_id" {
+  description = "ID of the Management subnet"
+  value       = azurerm_subnet.mgmt.id
+}
+
+# Subnet Address Prefixes
+output "subnet_web_cidr" {
+  description = "CIDR block of Web subnet"
+  value       = azurerm_subnet.web.address_prefixes[0]
+}
+
+output "subnet_app_cidr" {
+  description = "CIDR block of App subnet"
+  value       = azurerm_subnet.app.address_prefixes[0]
+}
+
+output "subnet_data_cidr" {
+  description = "CIDR block of Data subnet"
+  value       = azurerm_subnet.data.address_prefixes[0]
+}
+
+output "subnet_mgmt_cidr" {
+  description = "CIDR block of Management subnet"
+  value       = azurerm_subnet.mgmt.address_prefixes[0]
+}
+
+# NSG Names
+output "nsg_web_name" {
+  description = "Name of Web NSG"
+  value       = azurerm_network_security_group.web.name
+}
+
+output "nsg_app_name" {
+  description = "Name of App NSG"
+  value       = azurerm_network_security_group.app.name
+}
+
+output "nsg_data_name" {
+  description = "Name of Data NSG"
+  value       = azurerm_network_security_group.data.name
+}
+
+output "nsg_mgmt_name" {
+  description = "Name of Management NSG"
+  value       = azurerm_network_security_group.mgmt.name
+}

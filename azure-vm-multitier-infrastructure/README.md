@@ -1,82 +1,41 @@
-# Azure VM Multi-Tier Infrastructure
+## 🎯 Phase Roadmap
 
-Learning project to build production-ready VM infrastructure.
+### ✅ Phase 1: Foundation (COMPLETED)
+- [x] Single VM deployment
+- [x] Basic networking (VNet, Subnet)
+- [x] SSH and HTTP access
+- [x] Cloud-init automation
+- [x] Persistent data disk
+- [x] Comprehensive documentation
 
-## 🎯 Project Goals
+### 🔄 Phase 2: Network Segmentation (IN PROGRESS)
+- [x] Multiple subnets (web, app, data, management) ✅ Step 1
+- [x] Subnet-level NSG rules ✅ Step 1
+- [x] Detailed security policies ✅ Step 1
+- [ ] Bastion host deployment (Step 2)
+- [ ] Secure SSH access via bastion (Step 2)
+- [ ] Network security testing (Step 3)
 
-- Learn Azure VM infrastructure from first principles
-- Master Terraform for infrastructure as code
-- Understand production-ready architecture patterns
-- Build incrementally (working code at every step)
-- Document everything for future reference
+## 🏗️ What's Deployed
 
-## 📊 Current Status
-
-**Phase 1: COMPLETED ✅**
-
-Single-VM infrastructure with automated configuration, persistent storage, and web server.
-
-## 🏗️ What's Deployed (Phase 1)
+### Network Infrastructure (Phase 2)
 ```
-├── Resource Group (rg-vminfra-lab-dev)
+├── Resource Group (rg-vm-lab-dev)
 ├── Virtual Network (10.0.0.0/16)
-│   └── Subnet (10.0.1.0/24)
-├── Network Security Group
-│   ├── SSH Rule (port 22)
-│   └── HTTP Rule (port 80)
+│   ├── Web Subnet (10.0.1.0/24) + NSG
+│   ├── App Subnet (10.0.2.0/24) + NSG
+│   ├── Data Subnet (10.0.3.0/24) + NSG
+│   └── Management Subnet (10.0.10.0/24) + NSG
 ├── Public IP (Static)
-├── Network Interface
-├── Virtual Machine (Ubuntu 24.04, Standard_B1s)
-│   ├── OS Disk (30 GB)
-│   └── Data Disk (32 GB, mounted at /mnt/data)
-└── Cloud-Init Automation
-    ├── Nginx web server
-    ├── Development tools
-    └── Automated disk setup
+└── Virtual Machine (Ubuntu 22.04, Standard_B1s)
+    ├── Location: Web Subnet
+    ├── OS Disk (30 GB)
+    └── Data Disk (32 GB)
 ```
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Azure subscription
-- Terraform >= 1.0
-- Azure CLI >= 2.50
-- SSH client
-
-### Deploy
-```bash
-# Clone and navigate
-git clone 
-cd azure-learning-labs/azure-vm-multitier-infrastructure
-
-# Authenticate to Azure
-az login
-
-# Generate SSH key
-ssh-keygen -t rsa -b 4096 -f ~/.ssh/azure_vm_key
-
-# Deploy infrastructure
-cd terraform
-terraform init
-terraform plan main.tfplan
-terraform apply main.tfplan
-
-# Get connection info
-terraform output
-```
-
-### Access
-```bash
-# SSH
-ssh -i ~/.ssh/azure_vm_key azureuser@$(terraform output -raw public_ip_address)
-
-# Web (in browser)
-# http://[public-ip]
-```
-
-### Destroy
-```bash
-terraform plan -destroy -out main.destroy.tfplan
-terraform apply main.destroy.tfplan
-```
-
+### Security
+- ✅ 4 isolated subnets with specific purposes
+- ✅ 20+ NSG rules enforcing traffic policies
+- ✅ Default deny approach
+- ✅ HTTP/HTTPS from internet to web tier only
+- ⏳ Bastion host for SSH access (next step)
