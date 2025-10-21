@@ -105,18 +105,6 @@ resource "azurerm_network_security_group" "web" {
     destination_port_range     = "22"
     destination_address_prefix = "*"
   }
-  
-  security_rule {
-    name                       = "AllowSSHFromAmin"
-    priority                   = 130
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    source_address_prefix      = var.admin_source_ip
-    destination_port_range     = "22"
-    destination_address_prefix = "*"
-  }
 
   security_rule {
     name                       = "AllowToAppSubent"
@@ -342,4 +330,72 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data" {
   managed_disk_id    = azurerm_managed_disk.data.id
   lun                = 0
   caching            = "ReadWrite"
+}
+
+# ============================================
+# Bastion Host Resources
+# ============================================
+
+# Public IP for bastion host
+resource "azurerm_public_ip" "bastion" {
+  name                = "pip-bastion"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+# Network interface for bastion host
+resource "azurerm_network_interface" "bastion" {
+  name                = "nic-bastion"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.mgmt.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.bastion.id
+  }
+}
+
+# Bastion virtual machine - Jump host for secure SSH access
+resource "azurerm_linux_virtual_machine" "bastion" {
+  name                = var.bastion_vm_name
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  size                = var.bastion_vm_size
+  admin_username      = var.admin_username
+
+  # Bastin-specific cloud-init
+  custom_data = filebase64("${path.module}/../scripts/cloud-init/bastion-init.yml")
+
+  network_interface_ids = [
+    azurerm_network_interface.bastion.id,
+  ]
+
+  # SSH Key authentication only
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file("~/.ssh/azure_vm_key.pub")
+  }
+
+  # OS Disk
+  os_disk {
+    name                 = "osdisk-bastion"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server"
+    version   = "latest"
+  }
+
+  tags = {
+    Role    = "Bastion"
+    Purpose = "Jump host for administrative access"
+  }
 }

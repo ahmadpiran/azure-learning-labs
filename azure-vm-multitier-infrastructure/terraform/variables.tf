@@ -65,3 +65,19 @@ variable "data_disk_type" {
   type        = string
   default     = "Standard_LRS"
 }
+
+# ============================================
+# Bastion Host Configuration
+# ============================================
+
+variable "bastion_vm_size" {
+  description = "VM size for bastion host (can be smaller)"
+  type        = string
+  default     = "Standard_b1s"
+}
+
+variable "bastion_vm_name" {
+  description = "Name of the bastion VM"
+  type        = string
+  default     = "vm-vminfra-bastion-001"
+}

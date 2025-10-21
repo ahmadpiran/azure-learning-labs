@@ -1,0 +1,75 @@
+#cloud-config
+
+# Bastion host configuration
+# Purpose: Secure SSH jump host for administrative access
+
+package_update: true
+package_upgrade: true
+
+# Install useful tools for bastion host
+packages:
+  - htop
+  - net-tools
+  - curl
+  - vim
+  - tmux
+  - ncdu
+
+# Configure SSH for jump host
+write_files:
+  - path: /etc/ssh/sshd_config.d/bastion.conf
+    content: |
+      # Bastion SSH hardening
+      PermitRootLogin no
+      PasswordAuthentication no
+      PubkeyAuthentication yes
+      X11Forwarding no
+      MaxAuthTries 3
+      MaxSessions 5
+      ClientAliveInterval 300
+      ClientAliveCountMax 2
+    permissions: '0644'
+
+  - path: /etc/motd
+    content: |
+      ╔══════════════════════════════════════════════════════════╗
+      ║                                                          ║
+      ║       🔒 BASTION HOST - AUTHORIZED ACCESS ONLY           ║
+      ║                                                          ║
+      ║  This is a jump host for accessing internal VMs          ║
+      ║  All activities are logged and monitored                 ║
+      ║                                                          ║
+      ║  Available subnets:                                      ║
+      ║    - Web:  10.0.1.0/24                                   ║
+      ║    - App:  10.0.2.0/24                                   ║
+      ║    - Data: 10.0.3.0/24                                   ║
+      ║                                                          ║
+      ╚══════════════════════════════════════════════════════════╝
+    permissions: '0644'
+
+  - path: /home/azureuser/.ssh/config
+    content: |
+      # SSH client config for jump host
+      Host web-*
+        StrictHostKeyChecking no
+        UserKnownHostsFile /dev/null
+        User azureuser
+      
+      Host app-*
+        StrictHostKeyChecking no
+        UserKnownHostsFile /dev/null
+        User azureuser
+      
+      Host data-*
+        StrictHostKeyChecking no
+        UserKnownHostsFile /dev/null
+        User azureuser
+    owner: azureuser:azureuser
+    permissions: '0600'
+
+# Run commands after packages are installed
+runcmd:
+  # Log completion
+  - echo "Bastion host setup completed at $(date)" >> /var/log/bastion-setup.log
+
+final_message: "Bastion host ready for jump host operations"

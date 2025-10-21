@@ -104,3 +104,38 @@ output "nsg_mgmt_name" {
   description = "Name of Management NSG"
   value       = azurerm_network_security_group.mgmt.name
 }
+
+# ============================================
+# Bastion Host Outputs
+# ============================================
+
+output "bastion_public_ip" {
+  description = "Public IP address of the bastion host"
+  value       = azurerm_public_ip.bastion.ip_address
+}
+
+output "bastion_vm_name" {
+  description = "Name of the bastion vm"
+  value       = azurerm_linux_virtual_machine.main.name
+}
+
+output "bastion_private_ip" {
+  description = "Private IP address of bastion (in mgmt subnet)"
+  value       = azurerm_network_interface.bastion.private_ip_address
+}
+
+output "ssh_to_bastion" {
+  description = "Command to ssh to bastion host"
+  value       = "ssh -i ~/.ssh/azure_vm_key ${var.admin_username}@${azurerm_public_ip.bastion.ip_address}"
+}
+
+output "ssh_via_bastion_to_web" {
+  description = "Two-step SSH to web VM via bastion"
+  value       = <<-EOT
+    # Step 1: SSH to bastion
+    ssh -i ~/.ssh/azure_vm_key ${var.admin_username}@{azurerm_public_ip.bastion.ip_address}
+
+    # Step 2: From bastion, SSH to web VM
+    ssh ${var.admin_username}@${azurerm_network_interface.main.private_ip_address}
+  EOT
+}
