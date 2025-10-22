@@ -139,3 +139,28 @@ output "ssh_via_bastion_to_web" {
     ssh ${var.admin_username}@${azurerm_network_interface.main.private_ip_address}
   EOT
 }
+
+# ============================================
+# Application Tier Outputs
+# ============================================
+
+output "app_vm_name" {
+  description = "Name of the application VM"
+  value       = azurerm_linux_virtual_machine.app.name
+}
+
+output "app_vm_private_ip" {
+  description = "Private IP address of the application VM"
+  value       = azurerm_network_interface.app.private_ip_address
+}
+
+output "ssh_to_app_via_bastion" {
+  description = "Command to SSH to app VM via bastion"
+  value       = <<-EOT
+    # Step 1: SSH to bastion
+    ssh -i ~/.ssh/azure_vm_key ${var.admin_username}@${azurerm_public_ip.bastion.ip_address}
+    
+    # Step 2: From bastion, SSH to app VM
+    ssh ${var.admin_username}@${azurerm_network_interface.app.private_ip_address}
+  EOT
+}

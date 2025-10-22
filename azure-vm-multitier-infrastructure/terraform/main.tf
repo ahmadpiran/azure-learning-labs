@@ -399,3 +399,62 @@ resource "azurerm_linux_virtual_machine" "bastion" {
     Purpose = "Jump host for administrative access"
   }
 }
+
+# ============================================
+# Application Tier Resources
+# ============================================
+
+# Network interface for App VM - Private subnet only
+resource "azurerm_network_interface" "app" {
+  name                = "nic-app"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.app.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+# Application Tier Virtual Machine - Node.js API Server
+resource "azurerm_linux_virtual_machine" "app" {
+  name                = var.app_vm_name
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  size                = var.app_vm_size
+  admin_username      = var.admin_username
+
+  # App-specific cloud-init
+  custom_data = filebase64("${path.module}/../scripts/cloud-init/app-init.yml")
+
+  network_interface_ids = [
+    azurerm_network_interface.app.id,
+  ]
+
+  # SSH key authentication only
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file("~/.ssh/azure_vm_key.pub")
+  }
+
+  # OS disk
+  os_disk {
+    name                 = "osdisk-app"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server"
+    version   = "latest"
+  }
+
+  tags = {
+    Tier    = "Application"
+    Role    = "API Server"
+    Purpose = "Node.js backend"
+  }
+}

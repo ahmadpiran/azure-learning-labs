@@ -47,28 +47,32 @@ write_files:
       ╚══════════════════════════════════════════════════════════╝
     permissions: '0644'
 
-  - path: /home/azureuser/.ssh/config
-    content: |
-      # SSH client config for jump host
-      Host web-*
-        StrictHostKeyChecking no
-        UserKnownHostsFile /dev/null
-        User azureuser
-      
-      Host app-*
-        StrictHostKeyChecking no
-        UserKnownHostsFile /dev/null
-        User azureuser
-      
-      Host data-*
-        StrictHostKeyChecking no
-        UserKnownHostsFile /dev/null
-        User azureuser
-    owner: azureuser:azureuser
-    permissions: '0600'
-
 # Run commands after packages are installed
 runcmd:
+  - mkdir -p /home/azureuser/.ssh
+  - chown azureuser:azureuser /home/azureuser/.ssh
+  - chmod 700 /home/azureuser/.ssh
+  - |
+    cat <<'EOF' > /home/azureuser/.ssh/config
+    # SSH client config for jump host
+    Host web-*
+      StrictHostKeyChecking no
+      UserKnownHostsFile /dev/null
+      User azureuser
+
+    Host app-*
+      StrictHostKeyChecking no
+      UserKnownHostsFile /dev/null
+      User azureuser
+
+    Host data-*
+      StrictHostKeyChecking no
+      UserKnownHostsFile /dev/null
+      User azureuser
+    EOF
+  - chown azureuser:azureuser /home/azureuser/.ssh/config
+  - chmod 600 /home/azureuser/.ssh/config
+  
   # Log completion
   - echo "Bastion host setup completed at $(date)" >> /var/log/bastion-setup.log
 

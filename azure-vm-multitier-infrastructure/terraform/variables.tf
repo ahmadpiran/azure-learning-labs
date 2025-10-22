@@ -81,3 +81,19 @@ variable "bastion_vm_name" {
   type        = string
   default     = "vm-vminfra-bastion-001"
 }
+
+# ============================================
+# Application Tier Variables
+# ============================================
+
+variable "app_vm_name" {
+  description = "Name of the application tier VM"
+  type        = string
+  default     = "vm-vminfra-app-001"
+}
+
+variable "app_vm_size" {
+  description = "Size of the application VM"
+  type        = string
+  default     = "Standard_B1s"
+}
