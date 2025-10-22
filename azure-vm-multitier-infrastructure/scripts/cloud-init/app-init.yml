@@ -15,7 +15,7 @@ packages:
   - vim
   - build-essential  # For npm native modules
 
-# Create application directory structure
+# Create environment variables and MOTD banner
 write_files:
   - path: /etc/profile.d/node-env.sh
     content: |
@@ -24,73 +24,58 @@ write_files:
       export PORT=8080
     permissions: '0644'
 
-  - path: /home/azureuser/app/.gitkeep
-    content: |
-      # Application will be deployed here
-    owner: azureuser:azureuser
-    permissions: '0644'
-
   - path: /etc/motd
     content: |
-      ╔══════════════════════════════════════════════════════════╗
-      ║                                                          ║
-      ║              🚀 APPLICATION TIER VM                     ║
-      ║                                                          ║
-      ║  Purpose: Node.js API Server                             ║
-      ║  Subnet: App (10.0.2.0/24)                               ║
-      ║  Access: Via bastion only                                ║
-      ║                                                          ║
-      ║  Application Directory: /home/azureuser/app              ║
-      ║  Logs: /home/azureuser/app/logs                          ║
-      ║  Port: 8080                                              ║
-      ║                                                          ║
-      ╚══════════════════════════════════════════════════════════╝
+      ╔═══════════════════════════════════════════════════════════╗
+      ║                                                           ║
+      ║              🚀 APPLICATION TIER VM                       ║
+      ║                                                           ║
+      ║  Purpose: Node.js API Server                              ║
+      ║  Subnet: App (10.0.2.0/24)                                ║
+      ║  Access: Via bastion only                                 ║
+      ║                                                           ║
+      ║  Application Directory: /home/azureuser/app               ║
+      ║  Logs: /home/azureuser/app/logs                           ║
+      ║  Port: 8080                                               ║
+      ║                                                           ║
+      ╚═══════════════════════════════════════════════════════════╝
     permissions: '0644'
 
 # Run commands after packages are installed
 runcmd:
-  # Install Node.js 18 LTS
-  - curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-  - apt-get install -y nodejs
-  
-  # Verify Node.js installation
-  - node --version > /var/log/nodejs-version.log
-  - npm --version >> /var/log/nodejs-version.log
-  
-  # Create application directories
-  - mkdir -p /home/azureuser/app/logs
-  - chown -R azureuser:azureuser /home/azureuser/app
-  
-  # Install PM2 (process manager for Node.js)
-  - npm install -g pm2
-  
-  # Configure PM2 to start on boot
-  - sudo -u azureuser pm2 startup systemd -u azureuser --hp /home/azureuser
-  - env PATH=$PATH:/usr/bin pm2 startup systemd -u azureuser --hp /home/azureuser
-  
-  # Create a test file to verify setup
+  - 'id -u azureuser || adduser --disabled-password --gecos "" azureuser'
+  - 'curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -'
+  - 'sudo apt-get update'
+  - 'sudo apt-get install -y nodejs npm'
+  - 'node --version | tee /var/log/nodejs-version.log'
+  - 'npm --version | tee -a /var/log/nodejs-version.log'
+  - 'sudo mkdir -p /home/azureuser/app/logs'
+  - 'sudo chown -R azureuser:azureuser /home/azureuser/app'
+  - 'echo "# Application will be deployed here" | sudo tee /home/azureuser/app/.gitkeep'
+  - 'sudo chown azureuser:azureuser /home/azureuser/app/.gitkeep'
+  - 'sudo chmod 644 /home/azureuser/app/.gitkeep'
+  - 'sudo npm install -g pm2'
+  - 'pm2 --version | tee -a /var/log/nodejs-version.log'
+  - 'env PATH=$PATH:/usr/bin pm2 startup systemd -u azureuser --hp /home/azureuser'
   - |
-    cat > /home/azureuser/app/test-server.js << 'EOF'
+    cat << 'EOF' | sudo tee /home/azureuser/app/test-server.js
     // Simple test server
     const http = require('http');
     const port = 8080;
-    
+
     const server = http.createServer((req, res) => {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('App Tier VM is working! Node.js ' + process.version + '\n');
     });
-    
+
     server.listen(port, '0.0.0.0', () => {
       console.log(`Test server running on port ${port}`);
     });
     EOF
-  
-  - chown azureuser:azureuser /home/azureuser/app/test-server.js
-  
-  # Log completion
-  - echo "App VM setup completed at $(date)" >> /var/log/app-vm-setup.log
-  - echo "Node.js version: $(node --version)" >> /var/log/app-vm-setup.log
-  - echo "NPM version: $(npm --version)" >> /var/log/app-vm-setup.log
-  - echo "PM2 installed: $(pm2 --version)" >> /var/log/app-vm-setup.log
+  - 'sudo chown azureuser:azureuser /home/azureuser/app/test-server.js'
+  - 'echo "App VM setup completed at $(date)" | tee -a /var/log/app-vm-setup.log'
+  - 'echo "Node.js version: $(node --version)" | tee -a /var/log/app-vm-setup.log'
+  - 'echo "NPM version: $(npm --version)" | tee -a /var/log/app-vm-setup.log'
+  - 'echo "PM2 installed: $(pm2 --version)" | tee -a /var/log/app-vm-setup.log'
 
-final_message: "Application tier VM ready for Node.js deployment"
+final_message: "✅ Application tier VM ready for Node.js deployment"
