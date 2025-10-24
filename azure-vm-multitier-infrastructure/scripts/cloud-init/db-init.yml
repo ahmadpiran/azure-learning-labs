@@ -1,0 +1,148 @@
+#cloud-config
+
+# Database Tier VM Configuration
+# Purpose: PostgreSQL database server
+
+package_update: true
+package_upgrade: true
+
+# Install packages (use default version from Ubuntu repos)
+packages:
+  - postgresql
+  - postgresql-contrib
+  - postgresql-client
+  - htop
+  - net-tools
+  - vim
+
+# Write configuration files
+write_files:
+  - path: /etc/motd
+    content: |
+      ╔══════════════════════════════════════════════════════════╗
+      ║                                                          ║
+      ║              🗄️  DATABASE TIER VM                        ║
+      ║                                                          ║
+      ║  Purpose: PostgreSQL Database Server                     ║
+      ║  Subnet: Data (10.0.3.0/24)                              ║
+      ║  Access: Via bastion only                                ║
+      ║                                                          ║
+      ║  Database: taskdb                                        ║
+      ║  Port: 5432                                              ║
+      ║  Data: /mnt/dbdata/postgresql                            ║
+      ║                                                          ║
+      ║  ⚠️  Most Restricted Subnet - Limited Outbound           ║
+      ║                                                          ║
+      ╚══════════════════════════════════════════════════════════╝
+    permissions: '0644'
+
+  - path: /tmp/setup-postgres.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+      sleep 10
+      if [ -e /dev/disk/azure/scsi1/lun0 ]; then
+        echo "Data disk found, setting up..."
+        if ! blkid /dev/disk/azure/scsi1/lun0-part1; then
+          parted /dev/disk/azure/scsi1/lun0 --script mklabel gpt mkpart primary ext4 0% 100%
+          sleep 5
+          mkfs.ext4 /dev/disk/azure/scsi1/lun0-part1
+        fi
+        mkdir -p /mnt/dbdata
+        UUID=$(blkid -s UUID -o value /dev/disk/azure/scsi1/lun0-part1)
+        if ! grep -q "$UUID" /etc/fstab; then
+          echo "UUID=$UUID /mnt/dbdata ext4 defaults,nofail 0 2" >> /etc/fstab
+        fi
+        mount /mnt/dbdata || true
+        mkdir -p /mnt/dbdata/postgresql
+        chown -R postgres:postgres /mnt/dbdata/postgresql
+        chmod 700 /mnt/dbdata/postgresql
+        echo "Data disk setup complete"
+      else
+        echo "Data disk not found, using OS disk"
+        mkdir -p /mnt/dbdata/postgresql
+        chown -R postgres:postgres /mnt/dbdata/postgresql
+      fi
+
+  - path: /tmp/init-postgres.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+
+      # Detect installed PostgreSQL version and paths
+      PG_VERSION=$(ls /etc/postgresql | sort -n | tail -1)
+      CONF_DIR="/etc/postgresql/$PG_VERSION/main"
+      INITDB_BIN=$(find /usr/lib/postgresql -type f -name initdb | sort | tail -1)
+
+      systemctl stop postgresql
+
+      if [ ! -f /mnt/dbdata/postgresql/PG_VERSION ]; then
+        echo "Initializing PostgreSQL data directory..."
+        sudo -u postgres "$INITDB_BIN" -D /mnt/dbdata/postgresql
+        echo "data_directory = '/mnt/dbdata/postgresql'" >> "$CONF_DIR/postgresql.conf"
+      fi
+
+      # Configure PostgreSQL
+      sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" "$CONF_DIR/postgresql.conf"
+      echo "host    all    all    10.0.2.0/24    md5" >> "$CONF_DIR/pg_hba.conf"
+
+      systemctl start postgresql
+      systemctl enable postgresql
+      sleep 5
+      echo "PostgreSQL initialized and running"
+
+  - path: /tmp/create-database.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+      DB_NAME="${db_name}"
+      DB_USER="${db_user}"
+      DB_PASSWORD="${db_password}"
+
+      sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';" || true
+      sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;" || true
+      sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;" || true
+
+      sudo -u postgres psql -d $DB_NAME -c "
+        CREATE TABLE IF NOT EXISTS tasks (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          description TEXT,
+          completed BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );" || true
+
+      sudo -u postgres psql -d $DB_NAME -c "GRANT ALL PRIVILEGES ON TABLE tasks TO $DB_USER;" || true
+      sudo -u postgres psql -d $DB_NAME -c "GRANT USAGE, SELECT ON SEQUENCE tasks_id_seq TO $DB_USER;" || true
+
+      sudo -u postgres psql -d $DB_NAME -c "
+        INSERT INTO tasks (title, description, completed) VALUES
+        ('Setup Database', 'Install and configure PostgreSQL', true),
+        ('Create API', 'Build Node.js REST API', false),
+        ('Test Application', 'End-to-end testing', false)
+        ON CONFLICT DO NOTHING;" || true
+
+      echo "Database and table created successfully"
+
+  - path: /tmp/bootstrap.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      /tmp/setup-postgres.sh > /var/log/disk-setup.log 2>&1
+      /tmp/init-postgres.sh > /var/log/postgres-init.log 2>&1
+      sleep 10
+      /tmp/create-database.sh > /var/log/database-creation.log 2>&1
+      systemctl is-active postgresql >> /var/log/postgres-status.log 2>&1 || true
+      sudo -u postgres psql --version >> /var/log/postgres-version.log 2>&1
+      sudo -u postgres psql -d taskdb -c "SELECT * FROM tasks;" >> /var/log/database-test.log 2>&1 || true
+      echo "Database VM setup completed at $(date)" >> /var/log/db-vm-setup.log
+      exit 0
+
+# Run commands
+runcmd:
+  - /tmp/bootstrap.sh
+
+final_message: "Database tier VM ready with PostgreSQL"

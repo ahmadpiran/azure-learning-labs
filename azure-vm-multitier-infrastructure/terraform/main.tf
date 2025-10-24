@@ -217,13 +217,13 @@ resource "azurerm_network_security_group" "data" {
   }
 
   security_rule {
-    name                       = "AllowHTTPSForUpdates"
+    name                       = "DenyHTTPOutbound"
     priority                   = 100
     direction                  = "Outbound"
-    access                     = "Allow"
+    access                     = "Deny"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "443"
+    destination_port_range     = "80"
     source_address_prefix      = "*"
     destination_address_prefix = "Internet"
   }
@@ -457,4 +457,88 @@ resource "azurerm_linux_virtual_machine" "app" {
     Role    = "API Server"
     Purpose = "Node.js backend"
   }
+}
+
+# ============================================
+# Database Tier Resources
+# ============================================
+
+# Network interface for Database VM
+resource "azurerm_network_interface" "db" {
+  name                = "nic-db"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.data.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+# Managed disk for database storage
+resource "azurerm_managed_disk" "db_data" {
+  name                 = "disk-data-db-001"
+  location             = azurerm_resource_group.main.location
+  resource_group_name  = azurerm_resource_group.main.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = var.db_data_disk_size_gb
+
+  tags = {
+    Purpose = "PostgreSQL data storage"
+    Tier    = "Database"
+  }
+}
+
+# Database virtual machine - PostgreSQL Server
+resource "azurerm_linux_virtual_machine" "db" {
+  name                = var.db_vm_name
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  size                = var.db_vm_size
+  admin_username      = var.admin_username
+
+  # Database-specific cloud-init with templated variables
+  custom_data = base64encode(templatefile("${path.module}/../scripts/cloud-init/db-init.yml", {
+    db_name     = var.db_name,
+    db_user     = var.db_user,
+    db_password = var.db_password
+  }))
+
+  network_interface_ids = [
+    azurerm_network_interface.db.id,
+  ]
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file("~/.ssh/azure_vm_key.pub")
+  }
+
+  os_disk {
+    name                 = "osdisk-db"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server"
+    version   = "latest"
+  }
+
+  tags = {
+    Purpose = "Data storage"
+    Tier    = "Database"
+    Role    = "PostgreSQL server"
+  }
+}
+
+# Attach data disk to database VM
+resource "azurerm_virtual_machine_data_disk_attachment" "db_data" {
+  managed_disk_id    = azurerm_managed_disk.db_data.id
+  virtual_machine_id = azurerm_linux_virtual_machine.db.id
+  lun                = 0
+  caching            = "ReadWrite"
 }

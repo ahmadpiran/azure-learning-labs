@@ -164,3 +164,40 @@ output "ssh_to_app_via_bastion" {
     ssh ${var.admin_username}@${azurerm_network_interface.app.private_ip_address}
   EOT
 }
+
+# ============================================
+# Database Tier Outputs
+# ============================================
+
+output "db_vm_name" {
+  description = "Name of the database VM"
+  value       = azurerm_linux_virtual_machine.db.name
+}
+
+output "db_vm_private_ip" {
+  description = "Private IP address of the database VM"
+  value       = azurerm_network_interface.db.private_ip_address
+}
+
+output "db_connection_string" {
+  description = "PostgreSQL connection string (from app tier)"
+  value       = "postgresql://${var.db_user}:${var.db_password}@${azurerm_network_interface.db.private_ip_address}:5432/${var.db_name}"
+  sensitive   = true
+}
+
+output "ssh_to_db_via_bastion" {
+  description = "Command to SSH to database VM via bastion"
+  value       = <<-EOT
+    # Step 1: SSH to bastion
+    ssh -i ~/.ssh/azure_vm_key ${var.admin_username}@${azurerm_public_ip.bastion.ip_address}
+    
+    # Step 2: From bastion, SSH to database VM
+    ssh ${var.admin_username}@${azurerm_network_interface.db.private_ip_address}
+  EOT
+}
+
+output "psql_test_command" {
+  description = "Command to test PostgreSQL connection from app VM"
+  value       = "psql -h ${azurerm_network_interface.db.private_ip_address} -U ${var.db_user} -d ${var.db_name}"
+  sensitive   = false
+}

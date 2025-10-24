@@ -97,3 +97,42 @@ variable "app_vm_size" {
   type        = string
   default     = "Standard_B1s"
 }
+
+# ============================================
+# Database Tier Variables
+# ============================================
+
+variable "db_vm_name" {
+  description = "Name of the database tier VM"
+  type        = string
+  default     = "vm-vminfra-db-001"
+}
+
+variable "db_vm_size" {
+  description = "Size of the database VM"
+  type        = string
+  default     = "Standard_B1s"
+}
+
+variable "db_data_disk_size_gb" {
+  description = "Size of the database data disk in GB"
+  type        = number
+  default     = 64
+}
+
+variable "db_name" {
+  description = "PostgreSQL database name"
+  type        = string
+  default     = "taskdb"
+}
+
+variable "db_user" {
+  description = "PostgreSQL database user"
+  type        = string
+  default     = "taskuser"
+}
+variable "db_password" {
+  description = "PostgreSQL database password"
+  type        = string
+  sensitive   = true
+}

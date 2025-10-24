@@ -17,26 +17,26 @@
 
 ### 🔄 Phase 3: Multi-VM & Application (IN PROGRESS)
 - [x] Deploy app tier VM in App subnet ✅ Step 1
-- [ ] Deploy database VM in Data subnet (Step 2)
+- [x] Deploy database VM in Data subnet ✅ Step 2
 - [ ] Configure application code (Step 3)
 - [ ] Test 3-tier communication (Step 4)
 - [ ] Full application deployment (Step 5)
 
 
-## 🏗️ What's Deployed (Phase 3 - Step 1)
+## 🏗️ What's Deployed (Phase 3 - Step 2)
 
-### Virtual Machines (3) ⬅️ Updated
-1. **vm-lab-001** (Web Server)
+### Virtual Machines (4) ⬅️ Updated
+1. **vm-vminfra-lab-001** (Web Server)
    - Location: Web Subnet (10.0.1.x)
    - Public IP: Yes (HTTP/HTTPS)
    - Software: Nginx
    
-2. **vm-bastion-001** (Jump Host)
+2. **vm-vminfra-bastion-001**
    - Location: Management Subnet (10.0.10.x)
    - Public IP: Yes (SSH from your IP)
    - Purpose: Administrative access
 
-3. **vm-app-001** (API Server) ⬅️ NEW
+3. **vm-vminfra-app-001** (API Server) ⬅️ NEW
    - Location: App Subnet (10.0.2.x)
    - Public IP: No (private)
    - Software: Node.js 18, PM2
