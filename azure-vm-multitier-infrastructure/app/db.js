@@ -9,7 +9,7 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'taskdb',
   user: process.env.DB_USER || 'taskuser',
-  password: process.env.DB_PASSWORD || 'TaskDB#2024Secure!',
+  password: process.env.DB_PASSWORD,
   // Connection pool settings
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
