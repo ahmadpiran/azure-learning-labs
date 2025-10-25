@@ -62,6 +62,8 @@ coverage/
 # Environment variables
 .env
 .env.test
+.env.example
+.env.dev
 .env.production
 
 # Build output

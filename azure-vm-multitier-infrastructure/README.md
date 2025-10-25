@@ -18,9 +18,12 @@
 ### 🔄 Phase 3: Multi-VM & Application (IN PROGRESS)
 - [x] Deploy app tier VM in App subnet ✅ Step 1
 - [x] Deploy database VM in Data subnet ✅ Step 2
-- [ ] Configure application code (Step 3)
-- [ ] Test 3-tier communication (Step 4)
-- [ ] Full application deployment (Step 5)
+- [x] Test database connectivity ✅ Step 2
+- [x] Build Node.js API application ✅ Step 3
+- [x] Deploy API to app VM ✅ Step 3
+- [x] Test API endpoints ✅ Step 3
+- [ ] Configure web tier reverse proxy (Step 4)
+- [ ] Test end-to-end application (Step 5)
 
 
 ## 🏗️ What's Deployed (Phase 3 - Step 2)

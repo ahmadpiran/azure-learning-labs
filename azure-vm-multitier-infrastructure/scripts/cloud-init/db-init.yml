@@ -12,8 +12,8 @@ packages:
   - postgresql-contrib
   - postgresql-client
   - htop
-  - net-tools
   - vim
+  - net-tools
 
 # Write configuration files
 write_files:
