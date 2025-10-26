@@ -38,8 +38,13 @@ output "data_disk_name" {
   value       = azurerm_managed_disk.data.name
 }
 
+output "vm_private_ip" {
+  description = "Private IP of the web VM"
+  value       = azurerm_network_interface.main.private_ip_address
+}
+
 # ============================================
-# Phase 2: Network Infrastructure Outputs
+# Network Infrastructure Outputs
 # ============================================
 
 # Subnet IDs

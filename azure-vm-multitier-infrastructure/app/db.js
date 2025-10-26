@@ -2,6 +2,8 @@
 // Handles PostgreSQL connection pooling
 
 const { Pool } = require('pg');
+require('dotenv').config();
+
 
 // Database configuration from environment variables
 const pool = new Pool({

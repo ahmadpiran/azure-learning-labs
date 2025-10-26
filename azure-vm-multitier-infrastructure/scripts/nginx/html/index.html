@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager - Azure Learning Labs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .status {
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .status h2 {
+            color: #0284c7;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .status-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .status-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .status-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #0284c7;
+        }
+        
+        .status-ok {
+            color: #16a34a;
+        }
+        
+        .tasks-section {
+            margin-top: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header h2 {
+            color: #333;
+            font-size: 1.5em;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .task-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .task-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .task-completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .task-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 20px;
+            border-radius: 8px;
+            color: #dc2626;
+            margin: 20px 0;
+        }
+        
+        .api-info {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .api-info h3 {
+            color: #16a34a;
+            margin-bottom: 10px;
+        }
+        
+        .api-info code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .architecture {
+            background: #faf5ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .architecture h3 {
+            color: #7c3aed;
+            margin-bottom: 15px;
+        }
+        
+        .tier-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .tier {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #7c3aed;
+        }
+        
+        .arrow {
+            color: #7c3aed;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Task Manager</h1>
+        <p class="subtitle">3-Tier Azure Architecture Demo</p>
+        
+        <!-- System Status -->
+        <div class="status">
+            <h2>System Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Web Tier</div>
+                    <div class="status-value status-ok" id="web-status">●</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">App Tier</div>
+                    <div class="status-value" id="app-status">●</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Database</div>
+                    <div class="status-value" id="db-status">●</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Total Tasks</div>
+                    <div class="status-value" id="task-count">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tasks Section -->
+        <div class="tasks-section">
+            <div class="section-header">
+                <h2>Tasks</h2>
+                <button class="btn" onclick="loadTasks()">🔄 Refresh</button>
+            </div>
+            
+            <div id="task-container">
+                <div class="loading">Loading tasks...</div>
+            </div>
+        </div>
+        
+        <!-- Architecture Info -->
+        <div class="architecture">
+            <h3>3-Tier Architecture</h3>
+            <div class="tier-flow">
+                <div class="tier">Web Tier<br>(Nginx)</div>
+                <div class="arrow">→</div>
+                <div class="tier">App Tier<br>(Node.js)</div>
+                <div class="arrow">→</div>
+                <div class="tier">Data Tier<br>(PostgreSQL)</div>
+            </div>
+        </div>
+        
+        <!-- API Info -->
+        <div class="api-info">
+            <h3>API Endpoints</h3>
+            <p><strong>Base URL:</strong> <code>/api</code></p>
+            <p><strong>Health Check:</strong> <code>GET /health</code></p>
+            <p><strong>List Tasks:</strong> <code>GET /api/tasks</code></p>
+            <p><strong>Create Task:</strong> <code>POST /api/tasks</code></p>
+        </div>
+    </div>
+    
+    <script>
+        // API base URL (relative to current host)
+        const API_URL = '/api';
+        
+        // Check API health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    document.getElementById('app-status').classList.add('status-ok');
+                    document.getElementById('db-status').classList.add('status-ok');
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+                document.getElementById('app-status').textContent = '✗';
+                document.getElementById('db-status').textContent = '?';
+            }
+        }
+        
+        // Load tasks from API
+        async function loadTasks() {
+            const container = document.getElementById('task-container');
+            container.innerHTML = '<div class="loading">Loading tasks...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/tasks`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    displayTasks(result.data);
+                    document.getElementById('task-count').textContent = result.data.length;
+                } else {
+                    container.innerHTML = '<div class="loading">No tasks found. Create one using the API!</div>';
+                }
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                container.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading tasks</strong><br>
+                        ${error.message}<br>
+                        <small>Make sure the API server is running on the app tier.</small>
+                    </div>
+                `;
+            }
+        }
+        
+        // Display tasks
+        function displayTasks(tasks) {
+            const container = document.getElementById('task-container');
+            const html = `
+                <ul class="task-list">
+                    ${tasks.map(task => `
+                        <li class="task-item">
+                            <div class="task-content">
+                                <div class="task-title">${escapeHtml(task.title)}</div>
+                                ${task.description ? `<div class="task-desc">${escapeHtml(task.description)}</div>` : ''}
+                            </div>
+                            <span class="task-status ${task.completed ? 'task-completed' : 'task-pending'}">
+                                ${task.completed ? '✓ Done' : '⏳ Pending'}
+                            </span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            container.innerHTML = html;
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            checkHealth();
+            loadTasks();
+        });
+    </script>
+</body>
+</html>

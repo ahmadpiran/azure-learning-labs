@@ -1,5 +1,7 @@
 ## 🎯 Phase Roadmap
 
+
+
 ### ✅ Phase 1: Foundation (COMPLETED)
 - [x] Single VM deployment
 - [x] Basic networking (VNet, Subnet)
@@ -22,35 +24,60 @@
 - [x] Build Node.js API application ✅ Step 3
 - [x] Deploy API to app VM ✅ Step 3
 - [x] Test API endpoints ✅ Step 3
-- [ ] Configure web tier reverse proxy (Step 4)
-- [ ] Test end-to-end application (Step 5)
+- [x] Configure web tier reverse proxy ✅ Step 4
+- [x] Deploy static website ✅ Step 4
+- [x] Test end-to-end flow ✅ Step 4
+- [ ] Comprehensive testing and validation (Step 5)
+- [ ] Final documentation and Phase 3 summary (Step 5)
 
+## 🏗️ Complete 3-Tier Architecture (Phase 3 Step 4)
+```
+Internet (Users)
+    │
+    │ HTTP/HTTPS
+    ▼
+┌─────────────────────────────────────────┐
+│  Web Tier (10.0.1.0/24)                │
+│  - Nginx Reverse Proxy                  │
+│  - Static Content                        │
+│  - API Gateway                           │
+└────────────┬────────────────────────────┘
+             │ Proxy /api/* requests
+             │ to 10.0.2.4:8080
+             ▼
+┌─────────────────────────────────────────┐
+│  App Tier (10.0.2.0/24)                │
+│  - Node.js Express API                  │
+│  - Business Logic                        │
+│  - REST Endpoints                        │
+└────────────┬────────────────────────────┘
+             │ PostgreSQL queries
+             │ to 10.0.3.4:5432
+             ▼
+┌─────────────────────────────────────────┐
+│  Data Tier (10.0.3.0/24)               │
+│  - PostgreSQL Database                  │
+│  - Task Storage                          │
+│  - Data Persistence                      │
+└─────────────────────────────────────────┘
 
-## 🏗️ What's Deployed (Phase 3 - Step 2)
+Management (10.0.10.0/24)
+  - Bastion Host (SSH access to all tiers)
+```
 
-### Virtual Machines (4) ⬅️ Updated
-1. **vm-vminfra-lab-001** (Web Server)
-   - Location: Web Subnet (10.0.1.x)
-   - Public IP: Yes (HTTP/HTTPS)
-   - Software: Nginx
-   
-2. **vm-vminfra-bastion-001**
-   - Location: Management Subnet (10.0.10.x)
-   - Public IP: Yes (SSH from your IP)
-   - Purpose: Administrative access
+## 🌐 Access the Application
 
-3. **vm-vminfra-app-001** (API Server) ⬅️ NEW
-   - Location: App Subnet (10.0.2.x)
-   - Public IP: No (private)
-   - Software: Node.js 18, PM2
-   - Port: 8080
+**Live Website:**
+```bash
+http://[YOUR_PUBLIC_IP]/
+```
 
-## 🔐 Security
+**API Endpoints:**
+```bash
+# Via web tier (recommended)
+http://[YOUR_PUBLIC_IP]/api/tasks
+http://[YOUR_PUBLIC_IP]/health
 
-- ✅ 4 isolated subnets
-- ✅ 20+ NSG rules enforcing traffic policies
-- ✅ Bastion host for secure SSH access ⬅️ NEW
-- ✅ No direct SSH to internal VMs ⬅️ NEW
-- ✅ Single auditable entry point ⬅️ NEW
-- ✅ Default deny policy
-- ✅ SSH key authentication only
+# Direct to app tier (from inside Azure only)
+http://10.0.2.4:8080/api/tasks
+```

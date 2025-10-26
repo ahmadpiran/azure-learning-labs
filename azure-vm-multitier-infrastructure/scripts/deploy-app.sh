@@ -14,7 +14,7 @@ echo ""
 BASTION_IP=$(cd terraform && terraform output -raw bastion_public_ip)
 APP_VM_IP=$(cd terraform && terraform output -raw app_vm_private_ip)
 DB_VM_IP=$(cd terraform && terraform output -raw db_vm_private_ip)
-DB_PASSWORD=$(cd terraform && terraform output -raw db_connection_string | grep -oP '://.*:(\K[^@]+)' || echo "TaskDB#2024Secure!")
+DB_PASSWORD=$(cd terraform && terraform output -raw db_connection_string | awk -F'[:@]' '{print $3}')
 
 echo "Configuration:"
 echo "  Bastion IP: $BASTION_IP"
@@ -56,7 +56,7 @@ DB_HOST=$DB_VM_IP
 DB_PORT=5432
 DB_NAME=taskdb
 DB_USER=taskuser
-DB_PASSWORD=$DB_PASSWORD
+DB_PASSWORD="$DB_PASSWORD"
 PORT=8080
 NODE_ENV=production
 ENV_EOF
